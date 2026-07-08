@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code Artifacts — A Developer's Guide</title>
+<meta name="description" content="What Claude Code artifacts are, how they get created, practical use cases, and tips for getting consistently good output.">
+<link rel="stylesheet" href="../assets/style.css">
+<style>
+  /* ── POST-SPECIFIC STYLES ── */
+  .tag-pill {
+    margin-left: auto;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.03em;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 5rem 2rem 3rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .hero-eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+  }
+  .hero h1 {
+    font-family: var(--serif);
+    font-size: clamp(2.2rem, 5vw, 3.4rem);
+    line-height: 1.15;
+    color: var(--ink);
+    margin-bottom: 1.25rem;
+  }
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+  .hero-sub {
+    font-size: 1.1rem;
+    color: var(--ink-2);
+    max-width: 560px;
+    margin-bottom: 2rem;
+  }
+  .hero-meta {
+    display: flex;
+    gap: 1.5rem;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-3);
+  }
+
+  /* ── LAYOUT ── */
+  .content-wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  /* ── SECTIONS ── */
+  .section {
+    padding: 3.5rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .section:last-child { border-bottom: none; }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+  }
+  .section h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 1rem;
+  }
+  p {
+    color: var(--ink-2);
+    margin-bottom: 1rem;
+  }
+  p:last-child { margin-bottom: 0; }
+
+  /* ── WHAT IS AN ARTIFACT ── */
+  .artifact-explainer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin: 2rem 0;
+  }
+  @media (max-width: 580px) {
+    .artifact-explainer { grid-template-columns: 1fr; }
+  }
+  .ex-card {
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 1.25rem;
+    background: var(--card);
+  }
+  .ex-card .ex-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--ink-3);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .ex-card.is-artifact { border-color: var(--accent); background: var(--accent-light); }
+  .ex-card.is-artifact .ex-label { color: var(--accent); }
+  .ex-card h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    color: var(--ink);
+  }
+  .ex-card p { font-size: 0.9rem; color: var(--ink-3); margin: 0; }
+
+  /* ── LIFECYCLE DIAGRAM ── */
+  .lifecycle {
+    margin: 2rem 0;
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--card);
+  }
+  .lifecycle-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .lifecycle-step:last-child { border-bottom: none; }
+  .step-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .step-content h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 0.2rem;
+  }
+  .step-content p { font-size: 0.875rem; color: var(--ink-3); margin: 0; }
+
+  /* ── CODE BLOCKS ── */
+  .code-block {
+    background: #1a1a18;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 1.5rem 0;
+    font-family: var(--mono);
+  }
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid #2e2e2b;
+  }
+  .code-header .filename {
+    font-size: 12px;
+    color: #888;
+  }
+  .code-header .lang-badge {
+    font-size: 11px;
+    color: var(--accent-mid);
+    background: rgba(80,70,228,0.15);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .code-body {
+    padding: 1.1rem 1.25rem;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #c8c8c0;
+    overflow-x: auto;
+  }
+  .code-body .kw { color: #8b83f0; }
+  .code-body .str { color: #86d9b0; }
+  .code-body .cmt { color: #556; font-style: italic; }
+  .code-body .fn { color: #f0c674; }
+  .code-body .var { color: #c8c8c0; }
+  .code-body .val { color: #f5c27a; }
+
+  /* ── USE CASE CARDS ── */
+  .usecase-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin: 2rem 0;
+  }
+  @media (max-width: 580px) { .usecase-grid { grid-template-columns: 1fr; } }
+  .uc-card {
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 1.25rem;
+    background: var(--card);
+    position: relative;
+    overflow: hidden;
+  }
+  .uc-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .uc-card:hover::before { opacity: 1; }
+  .uc-icon {
+    font-size: 1.4rem;
+    margin-bottom: 0.6rem;
+    display: block;
+  }
+  .uc-card h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 0.35rem;
+  }
+  .uc-card p { font-size: 0.875rem; color: var(--ink-3); margin: 0; }
+  .uc-card .uc-prompt {
+    margin-top: 0.75rem;
+    background: var(--page);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--ink-2);
+  }
+
+  /* ── TIPS ── */
+  .tip-list { margin: 1.5rem 0; }
+  .tip {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .tip:last-child { border-bottom: none; }
+  .tip-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+  .tip-icon.green { background: var(--green-bg); }
+  .tip-icon.amber { background: var(--amber-bg); }
+  .tip-body h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 0.2rem;
+  }
+  .tip-body p { font-size: 0.875rem; color: var(--ink-3); margin: 0; }
+
+  /* ── CALLOUT ── */
+  .callout {
+    border-left: 3px solid var(--accent);
+    padding: 1rem 1.25rem;
+    background: var(--accent-light);
+    border-radius: 0 8px 8px 0;
+    margin: 1.5rem 0;
+  }
+  .callout p {
+    font-size: 0.9rem;
+    color: var(--ink-2);
+    margin: 0;
+  }
+  .callout strong { color: var(--accent); }
+
+  .callout-warn {
+    border-left: 3px solid #d4890a;
+    background: var(--amber-bg);
+  }
+  .callout-warn p { color: var(--amber); }
+  .callout-warn strong { color: #a06200; }
+
+  /* ── INLINE CODE ── */
+  code {
+    font-family: var(--mono);
+    font-size: 0.85em;
+    background: #ededea;
+    padding: 1px 5px;
+    border-radius: 4px;
+    color: var(--accent);
+  }
+
+  /* ── FOOTER ── */
+  .site-footer {
+    border-top: 1px solid var(--rule);
+    padding: 2rem;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-3);
+  }
+
+  /* ── TABLE ── */
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+    font-size: 0.9rem;
+  }
+  .compare-table th {
+    text-align: left;
+    padding: 0.6rem 0.75rem;
+    background: var(--page);
+    border-bottom: 2px solid var(--rule);
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--ink-3);
+    font-family: var(--mono);
+    letter-spacing: 0.04em;
+  }
+  .compare-table td {
+    padding: 0.7rem 0.75rem;
+    border-bottom: 1px solid var(--rule);
+    color: var(--ink-2);
+  }
+  .compare-table tr:last-child td { border-bottom: none; }
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-family: var(--mono);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+  .badge-yes { background: var(--green-bg); color: var(--green); }
+  .badge-no  { background: #f5eded; color: #a03030; }
+  .badge-partial { background: var(--amber-bg); color: var(--amber); }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="logo" href="../index.html"><span>soumya</span>.dev</a>
+  <nav>
+    <a href="../index.html">← All posts</a>
+  </nav>
+  <span class="tag-pill">Guide · 2026</span>
+</header>
+
+<div class="hero">
+  <p class="hero-eyebrow">Claude Code · Deep Dive</p>
+  <h1>Stop reading code.<br>Start seeing <em>artifacts</em>.</h1>
+  <p class="hero-sub">Artifacts are Claude Code's way of making output you can actually use — rendered UIs, persistent files, and interactive demos instead of wall-of-text responses. Here's how they work and when to reach for them.</p>
+  <div class="hero-meta">
+    <span>5 min read</span>
+    <span>·</span>
+    <span>Developers new to Claude Code</span>
+  </div>
+</div>
+
+<div class="content-wrap">
+
+  <!-- ── SECTION 1: WHAT ── -->
+  <div class="section">
+    <p class="section-label">01 · What</p>
+    <h2>What is an artifact, exactly?</h2>
+    <p>When you ask Claude a question, it responds in the chat. But some responses are more than answers — they're things: a component, a document, a working UI, a data file. An <strong>artifact</strong> is how Claude delivers those things as a proper, standalone output that renders, downloads, or runs.</p>
+    <p>Think of it as the difference between Claude <em>describing</em> a bar chart and Claude <em>rendering</em> one you can interact with.</p>
+
+    <div class="artifact-explainer">
+      <div class="ex-card">
+        <div class="ex-label">Regular response</div>
+        <h3>Chat output</h3>
+        <p>Markdown text in the conversation. Useful for explanations, analysis, and short code snippets.</p>
+      </div>
+      <div class="ex-card is-artifact">
+        <div class="ex-label">Artifact</div>
+        <h3>Rendered output</h3>
+        <p>A live HTML page, a downloadable file, a React component, or an SVG — usable immediately.</p>
+      </div>
+    </div>
+
+    <p>Artifacts can be HTML, React (<code>.jsx</code>), SVG, Markdown, or any file Claude writes to disk using its computer tools. In the Claude.ai interface they render inline. In Claude Code (CLI), they live as real files in your workspace.</p>
+
+    <div class="callout">
+      <p><strong>Quick rule of thumb:</strong> if you'd copy the output out of chat and paste it somewhere else to use it, that's a sign it should be an artifact instead.</p>
+    </div>
+  </div>
+
+  <!-- ── SECTION 2: HOW ── -->
+  <div class="section">
+    <p class="section-label">02 · How</p>
+    <h2>How artifacts get created</h2>
+    <p>In Claude Code, you trigger artifact creation through natural language. Claude decides the format based on your intent — but you can also be explicit.</p>
+
+    <div class="lifecycle">
+      <div class="lifecycle-step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h4>You make a request with clear output intent</h4>
+          <p>"Build me a dashboard," "write a report," "create a component" — the verb signals a file or rendered thing, not an explanation.</p>
+        </div>
+      </div>
+      <div class="lifecycle-step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h4>Claude picks the artifact type</h4>
+          <p>HTML for UI/pages, React (.jsx) for interactive components, Markdown for documents, SVG for diagrams, plain files for everything else.</p>
+        </div>
+      </div>
+      <div class="lifecycle-step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h4>Claude Code writes the file to disk</h4>
+          <p>In the CLI, the file lands in your project directory. Claude reads skills, checks constraints, then writes it — not just prints it.</p>
+        </div>
+      </div>
+      <div class="lifecycle-step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <h4>You iterate in-place</h4>
+          <p>"Make the chart blue," "add a loading state," "fix the padding" — Claude edits the artifact directly rather than rewriting from scratch.</p>
+        </div>
+      </div>
+    </div>
+
+    <p>In Claude Code's CLI you can also use <code>/file</code> commands and reference <code>CLAUDE.md</code> to give Claude instructions about how artifacts should be structured in your project.</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span class="filename">CLAUDE.md (project root)</span>
+        <span class="lang-badge">markdown</span>
+      </div>
+      <div class="code-body">
+<span class="cmt"># Project conventions for Claude Code</span>
+
+<span class="cmt">## Output paths</span>
+<span class="kw">-</span> All generated UI goes in <span class="str">`src/components/generated/`</span>
+<span class="kw">-</span> Reports go in <span class="str">`reports/`</span> as Markdown
+
+<span class="cmt">## Stack constraints</span>
+<span class="kw">-</span> Vue 3 + TypeScript (no React)
+<span class="kw">-</span> Tailwind for styling
+<span class="kw">-</span> No external chart libraries — use native SVG
+      </div>
+    </div>
+
+    <p>Claude reads <code>CLAUDE.md</code> at session start and applies these rules to every artifact it creates. This is the most reliable way to keep generated files consistent with your actual codebase.</p>
+  </div>
+
+  <!-- ── SECTION 3: USE CASES ── -->
+  <div class="section">
+    <p class="section-label">03 · Use cases</p>
+    <h2>What to build with artifacts</h2>
+    <p>Artifacts earn their place when the output needs to be used somewhere — not just read. Here are the most common patterns:</p>
+
+    <div class="usecase-grid">
+      <div class="uc-card">
+        <span class="uc-icon">⚡</span>
+        <h3>Instant UI prototypes</h3>
+        <p>Spin up a working page or component in seconds. Great for stakeholder demos and design reviews before you wire up real data.</p>
+        <div class="uc-prompt">"Build a Tailwind Vue card component for a CRM lead record"</div>
+      </div>
+      <div class="uc-card">
+        <span class="uc-icon">📊</span>
+        <h3>Data visualisations</h3>
+        <p>Give Claude a CSV or schema and get back a live chart — recharts, D3, or plain SVG — ready to embed.</p>
+        <div class="uc-prompt">"Chart this CSV data as a stacked bar grouped by category"</div>
+      </div>
+      <div class="uc-card">
+        <span class="uc-icon">📄</span>
+        <h3>Structured documents</h3>
+        <p>Generate Confluence-ready Markdown, Word docs, or PDFs with real content — not templates to fill in later.</p>
+        <div class="uc-prompt">"Write a Confluence page documenting this n8n workflow"</div>
+      </div>
+
+
+      <div class="uc-card">
+        <span class="uc-icon">🗺️</span>
+        <h3>Architecture diagrams</h3>
+        <p>Describe a system in prose and get back a Mermaid or SVG diagram. Update it by describing what changed, not redrawing from scratch.</p>
+        <div class="uc-prompt">"Diagram the n8n → AI model → database pipeline as a flow chart"</div>
+      </div>
+    </div>
+
+
+  </div>
+
+  <!-- ── SECTION 4: ARTIFACT TYPES ── -->
+
+
+  <!-- ── SECTION 5: TIPS ── -->
+  <div class="section">
+    <p class="section-label">04 · Best practices</p>
+    <h2>Tips for getting good artifacts</h2>
+
+    <div class="tip-list">
+      <div class="tip">
+        <div class="tip-icon green">✅</div>
+        <div class="tip-body">
+          <h4>Be output-explicit</h4>
+          <p>Say "create a file," "write a component," or "build a page" — not just "help me with." Claude needs a signal that you want a standalone output, not chat prose.</p>
+        </div>
+      </div>
+      <div class="tip">
+        <div class="tip-icon green">✅</div>
+        <div class="tip-body">
+          <h4>Put constraints in CLAUDE.md, not every prompt</h4>
+          <p>Framework, stack, output paths, naming conventions — these belong in your project's <code>CLAUDE.md</code> so you don't repeat them. Claude checks it at session start.</p>
+        </div>
+      </div>
+      <div class="tip">
+        <div class="tip-icon green">✅</div>
+        <div class="tip-body">
+          <h4>Iterate on the same artifact, don't regenerate</h4>
+          <p>"Update the chart to use teal" is better than re-prompting from scratch. Claude uses <code>str_replace</code> to edit files in-place, keeping your iteration loop tight.</p>
+        </div>
+      </div>
+      <div class="tip">
+        <div class="tip-icon green">✅</div>
+        <div class="tip-body">
+          <h4>Ask for the artifact to run itself</h4>
+          <p>In Claude Code, you can ask Claude to write a script <em>and</em> execute it, then fix any errors. Close the loop: "write the migration, run it, report what changed."</p>
+        </div>
+      </div>
+      <div class="tip">
+        <div class="tip-icon amber">⚠️</div>
+        <div class="tip-body">
+          <h4>Don't use artifacts for short, throwaway snippets</h4>
+          <p>A 5-line helper function or a one-off SQL query doesn't need to be a file. Artifacts add overhead — save them for things you'll actually keep or share.</p>
+        </div>
+      </div>
+      
+    </div>
+
+    <div class="callout callout-warn">
+      <p><strong>React artifacts only:</strong> <code>localStorage</code> and <code>sessionStorage</code> don't work inside Claude.ai's sandboxed artifact renderer. Use React state (<code>useState</code>) for in-session data. If you need persistence across sessions, you'll need to take the code into your own environment.</p>
+    </div>
+  </div>
+
+  <!-- ── SECTION 6: QUICK PROMPTS ── -->
+  <div class="section">
+    <p class="section-label">05 · Quick start</p>
+    <h2>Copy-paste prompts to try now</h2>
+    <p>These are ready to drop into Claude Code. Swap the domain-specific nouns for your own context.</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span class="filename">Starter prompts</span>
+        <span class="lang-badge">natural language</span>
+      </div>
+      <div class="code-body">
+<span class="cmt"># Instant UI prototype</span>
+<span class="str">"Build an HTML + Tailwind dashboard showing 3 KPI cards and a placeholder chart. No backend needed."</span>
+
+<span class="cmt"># Data viz from data</span>
+<span class="str">"Here's a JSON array of monthly revenue figures. Create a React artifact using recharts to show it as a line chart with a tooltip."</span>
+
+<span class="cmt"># Doc from code</span>
+<span class="str">"Read the functions in utils.ts and write a Markdown doc explaining what each one does, with examples."</span>
+
+<span class="cmt"># Architecture diagram</span>
+<span class="str">"Diagram the flow from user request → n8n → AI model → response as a Mermaid sequence diagram."</span>
+
+<span class="cmt"># Close-the-loop test generation</span>
+<span class="str">"Write Vitest unit tests for the composable in useLeads.ts. Then run them and fix any failures you find."</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer class="site-footer">
+  <a href="../index.html">← All posts</a> · soumya.dev 
+</footer>
+
+</body>
+</html>
