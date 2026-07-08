@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>soumya.dev</title>
+<meta name="description" content="Soumya's personal dev journal — AI tooling, Claude, and whatever's on my screen this week.">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+  /* ── HERO ── */
+  .hero {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 4.5rem 2rem 3rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .hero-eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  .hero h1 {
+    font-family: var(--serif);
+    font-size: clamp(2rem, 5vw, 3rem);
+    line-height: 1.15;
+    color: var(--ink);
+    margin-bottom: 1rem;
+  }
+  .hero-sub {
+    font-size: 1rem;
+    color: var(--ink-2);
+    max-width: 520px;
+  }
+
+  /* ── POST LIST ── */
+  .posts-section {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 2rem;
+  }
+  .posts-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+  }
+  .posts-header h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .posts-count {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-3);
+  }
+
+  /* ── POST CARD ── */
+  .post-card {
+    display: block;
+    text-decoration: none;
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 1.4rem 1.5rem;
+    background: var(--card);
+    margin-bottom: 1rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    position: relative;
+  }
+  .post-card:hover {
+    border-color: var(--accent-mid);
+    box-shadow: 0 2px 12px rgba(80, 70, 228, 0.08);
+  }
+  .post-card:last-child { margin-bottom: 0; }
+
+  .post-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+  .post-tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    background: var(--accent-light);
+    color: var(--accent);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+  .post-date {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-3);
+  }
+  .post-read {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-3);
+    margin-left: auto;
+  }
+
+  .post-card h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 0.4rem;
+    line-height: 1.3;
+  }
+  .post-card p {
+    font-size: 0.9rem;
+    color: var(--ink-3);
+    line-height: 1.6;
+  }
+
+  .post-card .arrow {
+    position: absolute;
+    right: 1.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1rem;
+    color: var(--rule);
+    transition: color 0.15s, transform 0.15s;
+  }
+  .post-card:hover .arrow {
+    color: var(--accent);
+    transform: translateY(-50%) translateX(2px);
+  }
+
+  /* ── EMPTY SLOT (template for next post) ── */
+  .post-card.coming-soon {
+    border-style: dashed;
+    background: transparent;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .post-card.coming-soon h3 { color: var(--ink-3); }
+
+  /* ── TOPICS ── */
+  .topics {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 2rem 3rem;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .topic-chip {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-3);
+    border: 1px solid var(--rule);
+    border-radius: 20px;
+    padding: 4px 12px;
+    background: var(--card);
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="logo" href="index.html"><span>soumya</span>.dev</a>
+  <nav>
+    <a href="index.html" class="active">Posts</a>
+    <a href="https://github.com" target="_blank">GitHub ↗</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <p class="hero-eyebrow">soumya.dev</p>
+  <h1>Things I learned<br>building with AI.</h1>
+  <p class="hero-sub">Personal notes on Claude Code, AI tooling, n8n, and whatever's on my screen this week. Written for developers who like things direct.</p>
+</div>
+
+<div class="posts-section">
+  <div class="posts-header">
+    <h2>All posts</h2>
+    <span class="posts-count" id="post-count">3 posts</span>
+  </div>
+
+  <!-- ── POST 1 ── -->
+  <a class="post-card" href="posts/claude-code-artifacts.html">
+    <div class="post-meta">
+      <span class="post-tag">Claude Code</span>
+      <span class="post-date">Jul 2026</span>
+      <span class="post-read">5 min</span>
+    </div>
+    <h3>Stop reading code. Start seeing artifacts.</h3>
+    <p>What Claude Code artifacts are, how they get created, practical use cases, and tips for getting consistently good output.</p>
+    <span class="arrow">→</span>
+  </a>
+
+  <!-- ── POST 2 ──
+  <a class="post-card" href="posts/claude-code-routines.html">
+    <div class="post-meta">
+      <span class="post-tag">Claude Code</span>
+      <span class="post-date">Jul 2026</span>
+      <span class="post-read">6 min</span>
+    </div>
+    <h3>The routines that make Claude Code reliable.</h3>
+    <p>Hooks, CLAUDE.md automation, slash commands, and session management — the daily patterns that stop you from fighting the tool.</p>
+    <span class="arrow">→</span>
+  </a> -->
+
+  <!-- ── POST 3 ── -->
+  <!-- <a class="post-card" href="posts/claude-code-mcps.html">
+    <div class="post-meta">
+      <span class="post-tag">Claude Code</span>
+      <span class="post-date">Jul 2026</span>
+      <span class="post-read">7 min</span>
+    </div>
+    <h3>Give Claude Code actual access to your stack.</h3>
+    <p>What MCPs are, how to wire them in, and the specific ones I use daily — GitHub, Atlassian, n8n, and Snowflake.</p>
+    <span class="arrow">→</span>
+  </a> --> 
+
+  <!-- ── ADD NEW POST CARDS ABOVE THIS LINE ── -->
+
+  <!-- placeholder shown until second post exists -->
+  <!-- <div class="post-card coming-soon">
+    <div class="post-meta">
+      <span class="post-tag">Coming soon</span>
+    </div>
+    <h3>Next post</h3>
+    <p>Add a new .html file to /posts and a card here.</p>
+  </div> -->
+
+</div>
+
+<div class="topics">
+  <span class="topic-chip">Claude Code</span>
+  <span class="topic-chip">n8n</span>
+  <span class="topic-chip">Vue 3</span>
+  <span class="topic-chip">AWS</span>
+  <span class="topic-chip">Snowflake</span>
+  <span class="topic-chip">AI tooling</span>
+</div>
+
+<footer class="site-footer">
+  soumya.dev <a href="https://pages.github.com" target="_blank">GitHub Pages</a>
+</footer>
+
+</body>
+</html>
