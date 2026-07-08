@@ -1,4 +1,4 @@
-# dev-blog
+# my-dev-blog
 
 Personal dev notes blog, hosted on GitHub Pages.
 
