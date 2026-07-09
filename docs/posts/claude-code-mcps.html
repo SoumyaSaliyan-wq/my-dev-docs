@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code MCPs — soumya.dev</title>
+<meta name="description" content="What MCPs are and the ones I use daily — GitHub, Atlassian, Figma, Notion, and Hatchable.">
+<link rel="stylesheet" href="../assets/style.css">
+<style>
+  .tag-pill {
+    margin-left: auto;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.03em;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 5rem 2rem 3rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .hero-eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+  }
+  .hero h1 {
+    font-family: var(--serif);
+    font-size: clamp(2.2rem, 5vw, 3.4rem);
+    line-height: 1.15;
+    color: var(--ink);
+    margin-bottom: 1.25rem;
+  }
+  .hero h1 em { font-style: italic; color: var(--accent); }
+  .hero-sub {
+    font-size: 1.1rem;
+    color: var(--ink-2);
+    max-width: 560px;
+    margin-bottom: 2rem;
+  }
+  .hero-meta {
+    display: flex;
+    gap: 1.5rem;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-3);
+  }
+
+  /* ── LAYOUT ── */
+  .content-wrap { max-width: 720px; margin: 0 auto; padding: 0 2rem; }
+  .section { padding: 3.5rem 0; border-bottom: 1px solid var(--rule); }
+  .section:last-child { border-bottom: none; }
+  .section-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+  }
+  .section h2 { font-size: 1.5rem; font-weight: 600; color: var(--ink); margin-bottom: 1rem; }
+  p { color: var(--ink-2); margin-bottom: 1rem; }
+  p:last-child { margin-bottom: 0; }
+
+  /* ── CALLOUTS ── */
+  .callout {
+    border-left: 3px solid var(--accent);
+    padding: 1rem 1.25rem;
+    background: var(--accent-light);
+    border-radius: 0 8px 8px 0;
+    margin: 1.5rem 0;
+  }
+  .callout p { font-size: 0.9rem; color: var(--ink-2); margin: 0; }
+  .callout strong { color: var(--accent); }
+
+  /* ── BEFORE / AFTER ── */
+  .before-after {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    margin: 1.5rem 0;
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--card);
+  }
+  @media (max-width: 560px) { .before-after { grid-template-columns: 1fr; } }
+  .ba-col { padding: 1.25rem 1.5rem; }
+  .ba-col:first-child { border-right: 1px solid var(--rule); }
+  .ba-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .ba-label::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+  .ba-label.before { color: #a03030; }
+  .ba-label.before::before { background: #e05555; }
+  .ba-label.after  { color: var(--green); }
+  .ba-label.after::before  { background: var(--green); }
+  .ba-col p { font-size: 0.9rem; color: var(--ink-2); margin: 0; line-height: 1.65; }
+
+  /* ── DIAGRAM ── */
+  .diagram-wrap {
+    margin: 1.5rem 0;
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 1.25rem;
+    background: var(--card);
+  }
+  .diagram-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 1rem !important;
+  }
+
+  /* ── MCP CARDS ── */
+  .mcp-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.85rem;
+    margin: 2rem 0;
+  }
+  @media (max-width: 560px) { .mcp-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .mcp-card {
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 1rem 1.1rem;
+    background: var(--card);
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .mcp-card:hover {
+    border-color: var(--accent-mid);
+    box-shadow: 0 2px 10px rgba(80,70,228,0.08);
+  }
+  .mcp-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+    border: 1px solid var(--rule);
+  }
+  .mcp-icon.purple { background: #f0edfe; }
+  .mcp-icon.blue   { background: #e8f0fd; }
+  .mcp-icon.orange { background: #fff1e8; }
+  .mcp-icon.teal   { background: #e6f7f0; }
+  .mcp-icon.green  { background: #e6f7f0; }
+
+  .mcp-info h3 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin: 0 0 3px;
+  }
+  .mcp-info p {
+    font-size: 0.8rem;
+    color: var(--ink-3);
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  /* ── TIPS ── */
+  .tip-grid { display: flex; flex-direction: column; gap: 0; margin: 2rem 0; border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; background: var(--card); }
+
+  .tip-item {
+    display: flex;
+    gap: 1.25rem;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--rule);
+    transition: background 0.15s;
+  }
+  .tip-item:last-child { border-bottom: none; }
+  .tip-item:hover { background: var(--page); }
+
+  .tip-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--accent);
+    background: var(--accent-light);
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .tip-body h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 0.3rem;
+  }
+  .tip-body p {
+    font-size: 0.875rem;
+    color: var(--ink-3);
+    margin: 0;
+    line-height: 1.6;
+  }
+  .tip-body code {
+    font-family: var(--mono);
+    font-size: 0.8em;
+    background: #ededea;
+    padding: 1px 5px;
+    border-radius: 4px;
+    color: var(--accent);
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="logo" href="../index.html"><span>soumya</span>.dev</a>
+  <nav>
+    <a href="../index.html">← All posts</a>
+  </nav>
+  <span class="tag-pill">Claude Code · 2026</span>
+</header>
+
+<div class="hero">
+  <p class="hero-eyebrow">Claude Code · MCPs</p>
+  <h1>Give Claude Code<br><em>actual access</em> to your stack.</h1>
+  <p class="hero-sub">MCPs are how Claude connects to your real tools — GitHub, Notion, Figma and more. Not just reading about them. Actually using them. Here's what they are and the ones I use daily.</p>
+  <div class="hero-meta">
+    <span>5 min read</span>
+    <span>·</span>
+    <span>Intermediate</span>
+  </div>
+</div>
+
+<div class="content-wrap">
+
+  <!-- SECTION 1: WHAT -->
+  <div class="section">
+    <p class="section-label">01 · What</p>
+    <h2>What MCPs actually are</h2>
+    <p>MCP stands for Model Context Protocol — an open standard that lets Claude connect to external services as tools it can call during a conversation. When an MCP is connected, Claude can search your Confluence docs, open a GitHub PR, read a Figma file, or update a Notion page — not just talk about how to do it.</p>
+    <p>Without MCPs, Claude knows about your tools the way a consultant does after a briefing. With MCPs, it knows the way a teammate does who has access to the same systems.</p>
+
+    <div class="before-after">
+      <div class="ba-col">
+        <div class="ba-label before">Without MCP</div>
+        <p>"You'll need to search your Confluence space manually for the API docs — I don't have access to your internal pages."</p>
+      </div>
+      <div class="ba-col">
+        <div class="ba-label after">With Atlassian MCP</div>
+        <p>"Found 3 Confluence pages matching 'API authentication'. The most recent one was updated last week — want me to summarise it?"</p>
+      </div>
+    </div>
+
+    <p>MCPs follow a client-server model. Each MCP server exposes a set of tools. Claude calls those tools during a response the same way it calls any other tool — it just happens to go over the network to a real service.</p>
+
+    <div class="diagram-wrap">
+
+      <svg width="100%" viewBox="0 0 680 340" role="img" xmlns="http://www.w3.org/2000/svg">
+        <title>Documenting a feature using Notion MCP</title>
+        <desc>Story flow: developer is building a feature, asks Claude to document it, Claude reads the code, calls Notion MCP, creates a page, and confirms back.</desc>
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </marker>
+        </defs>
+
+        <!-- Step 1: You (building a feature) -->
+        <rect x="20" y="40" width="130" height="64" rx="8" fill="#ededfc" stroke="#7f77dd" stroke-width="0.5"/>
+        <text x="85" y="64" text-anchor="middle" font-family="inherit" font-size="12" font-weight="500" fill="#3c3489">You</text>
+        <text x="85" y="82" text-anchor="middle" font-family="inherit" font-size="10.5" fill="#534ab7">Building a feature,</text>
+        <text x="85" y="96" text-anchor="middle" font-family="inherit" font-size="10.5" fill="#534ab7">want it documented</text>
+
+        <!-- Arrow down -->
+        <line x1="85" y1="104" x2="85" y2="138" stroke="#888780" stroke-width="1" marker-end="url(#arr)"/>
+        <text x="96" y="124" font-family="inherit" font-size="10" fill="#888780">"Document this in Notion"</text>
+
+        <!-- Step 2: Claude reads code -->
+        <rect x="20" y="138" width="130" height="64" rx="8" fill="#e1f5ee" stroke="#1d9e75" stroke-width="0.5"/>
+        <text x="85" y="162" text-anchor="middle" font-family="inherit" font-size="12" font-weight="500" fill="#085041">Claude</text>
+        <text x="85" y="180" text-anchor="middle" font-family="inherit" font-size="10.5" fill="#0f6e56">Reads your code,</text>
+        <text x="85" y="194" text-anchor="middle" font-family="inherit" font-size="10.5" fill="#0f6e56">understands the feature</text>
+
+        <!-- Arrow right to MCP -->
+        <line x1="150" y1="170" x2="240" y2="170" stroke="#888780" stroke-width="1" marker-end="url(#arr)"/>
+        <text x="195" y="160" text-anchor="middle" font-family="inherit" font-size="10" fill="#888780">calls Notion MCP</text>
+
+        <!-- Step 3: MCP Server -->
+        <rect x="240" y="138" width="140" height="64" rx="8" fill="#e1f5ee" stroke="#1d9e75" stroke-width="0.5"/>
+        <text x="310" y="162" text-anchor="middle" font-family="inherit" font-size="12" font-weight="500" fill="#085041">Notion MCP</text>
+        <text x="310" y="180" text-anchor="middle" font-family="inherit" font-size="10.5" fill="#0f6e56">Authenticates with</text>
+        <text x="310" y="194" text-anchor="middle" font-family="inherit" font-size="10.5" fill="#0f6e56">your Notion account</text>
+
+        <!-- Arrow right to Notion -->
+        <line x1="380" y1="170" x2="460" y2="170" stroke="#888780" stroke-width="1" marker-end="url(#arr)"/>
+        <text x="420" y="160" text-anchor="middle" font-family="inherit" font-size="10" fill="#888780">creates page</text>
+
+        <!-- Step 4: Notion page created -->
+        <rect x="460" y="138" width="200" height="64" rx="8" fill="#faeeda" stroke="#ba7517" stroke-width="0.5"/>
+        <text x="560" y="158" text-anchor="middle" font-family="inherit" font-size="12" font-weight="500" fill="#633806">Notion</text>
+        <text x="560" y="176" text-anchor="middle" font-family="inherit" font-size="10.5" fill="#854f0b">New page created with</text>
+        <text x="560" y="191" text-anchor="middle" font-family="inherit" font-size="10.5" fill="#854f0b">feature docs + link</text>
+
+        <!-- Arrow back down from Notion to confirm -->
+        <line x1="560" y1="202" x2="560" y2="252" stroke="#888780" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arr)"/>
+        <line x1="560" y1="252" x2="150" y2="252" stroke="#888780" stroke-width="1" stroke-dasharray="4 3"/>
+        <line x1="150" y1="252" x2="150" y2="220" stroke="#888780" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arr)"/>
+
+        <!-- Confirmation box -->
+        <rect x="170" y="258" width="310" height="48" rx="8" fill="#f7f6f2" stroke="#e0ddd5" stroke-width="0.5"/>
+        <text x="325" y="278" text-anchor="middle" font-family="inherit" font-size="11" font-weight="500" fill="#3a3a38">Claude replies: "Done! Here's your Notion page →"</text>
+        <text x="325" y="296" text-anchor="middle" font-family="inherit" font-size="10.5" fill="#6b6b68">You never left your editor.</text>
+
+      </svg>
+    </div>
+  </div>
+
+  <!-- SECTION 2: MY STACK -->
+  <div class="section">
+    <p class="section-label">02 · My stack</p>
+    <h2>The MCPs I use every day</h2>
+    <p>These are the five that actually changed how I work — not ones I configured and forgot about.</p>
+
+    <div class="mcp-grid">
+
+      <div class="mcp-card">
+        <div class="mcp-icon purple">⚙️</div>
+        <div class="mcp-info">
+          <h3>GitHub</h3>
+          <p>Search code, review PRs, create issues — without leaving the conversation.</p>
+        </div>
+      </div>
+
+      <div class="mcp-card">
+        <div class="mcp-icon blue">🔷</div>
+        <div class="mcp-info">
+          <h3>Atlassian</h3>
+          <p>Search Confluence, update Jira tickets, write docs directly.</p>
+        </div>
+      </div>
+
+      <div class="mcp-card">
+        <div class="mcp-icon purple">🎨</div>
+        <div class="mcp-info">
+          <h3>Figma</h3>
+          <p>Read design files, extract tokens and components for code generation.</p>
+        </div>
+      </div>
+
+      <div class="mcp-card">
+        <div class="mcp-icon teal">📝</div>
+        <div class="mcp-info">
+          <h3>Notion</h3>
+          <p>Search, read, and update pages mid-conversation without switching tabs.</p>
+        </div>
+      </div>
+
+      <div class="mcp-card">
+        <div class="mcp-icon orange">🚀</div>
+        <div class="mcp-info">
+          <h3>Hatchable</h3>
+          <p>Build and deploy live apps with a real URL, DB, and auth — from a single prompt.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECTION 3: TIPS -->
+  <div class="section">
+    <p class="section-label">03 · Tips</p>
+    <h2>Things I wish I knew earlier</h2>
+
+    <div class="tip-grid">
+      <div class="tip-item">
+        <div class="tip-num">01</div>
+        <div class="tip-body">
+          <h4>Start with one MCP, not all of them</h4>
+          <p>Add GitHub first. Get comfortable with how Claude decides to use it. Then add the next. Configuring 6 at once and debugging why nothing works is painful.</p>
+        </div>
+      </div>
+      <div class="tip-item">
+        <div class="tip-num">02</div>
+        <div class="tip-body">
+          <h4>Tell Claude which MCP to use when it's ambiguous</h4>
+          <p>"Search our Confluence pages for X" is clearer than "find docs on X" when you have multiple connected sources.</p>
+        </div>
+      </div>
+      <div class="tip-item">
+        <div class="tip-num">03</div>
+        <div class="tip-body">
+          <h4>Be explicit when you don't want Claude touching a live system</h4>
+          <p>Claude will use available MCP tools to answer questions even when you didn't explicitly ask it to. If you ask "what issues are open?" and Jira is connected, it'll search Jira. Say so when you don't want that.</p>
+        </div>
+      </div>
+      <div class="tip-item">
+        <div class="tip-num">04</div>
+        <div class="tip-body">
+          <h4>Connected doesn't mean always active</h4>
+          <p>Just because an MCP is connected doesn't mean Claude uses it for everything. It only calls a tool when it's relevant to your request — so having 5 MCPs connected won't slow things down or cause noise.</p>
+        </div>
+      </div>
+      <div class="tip-item">
+        <div class="tip-num">05</div>
+        <div class="tip-body">
+          <h4><code>/mcp</code> is your debugger</h4>
+          <p>If Claude says it can't find something you know exists, run <code>/mcp</code> first. Half the time the server disconnected quietly.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer class="site-footer">
+  <a href="../index.html">← All posts</a> · soumya.dev 
+</footer>
+
+</body>
+</html>
