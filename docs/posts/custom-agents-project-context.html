@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agents That Remember Your Project: Custom Claude Code Agents — soumya.dev</title>
+<meta name="description" content="A repeated prompt is an agent waiting to be written. How custom Claude Code agents carry project context in layers, how orchestrators hand work to specialists, and where multi-agent setups break.">
+<link rel="stylesheet" href="../assets/style.css">
+<style>
+  /* ── HERO ── */
+  .hero { max-width: 720px; margin: 0 auto; padding: 5rem 2rem 3rem; border-bottom: 1px solid var(--rule); }
+  .hero-eyebrow {
+    font-family: var(--mono); font-size: 12px; color: var(--accent);
+    letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 1.5rem;
+  }
+  .hero h1 {
+    font-family: var(--serif); font-size: clamp(2.2rem, 5vw, 3.4rem);
+    line-height: 1.15; color: var(--ink); margin-bottom: 1.25rem;
+  }
+  .hero h1 em { font-style: italic; color: var(--accent); }
+  .hero-sub { font-size: 1.1rem; color: var(--ink-2); max-width: 560px; margin-bottom: 2rem; }
+  .hero-meta { display: flex; gap: 1.5rem; flex-wrap: wrap; font-family: var(--mono); font-size: 12px; color: var(--ink-3); }
+
+  /* ── SECTIONS ── */
+  .section { padding: 3.5rem 0; border-bottom: 1px solid var(--rule); }
+  .section:last-child { border-bottom: none; }
+  .section-label {
+    font-family: var(--mono); font-size: 11px; color: var(--ink-3);
+    letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.75rem;
+  }
+  .section h2 { font-size: 1.5rem; font-weight: 600; color: var(--ink); margin-bottom: 1rem; }
+  p { color: var(--ink-2); margin-bottom: 1rem; line-height: 1.7; }
+  p:last-child { margin-bottom: 0; }
+
+  /* ── CALLOUTS ── */
+  .callout {
+    border-left: 3px solid var(--accent); padding: 1rem 1.25rem;
+    background: var(--accent-light); border-radius: 0 8px 8px 0; margin: 1.5rem 0;
+  }
+  .callout p { font-size: 0.9rem; color: var(--ink-2); margin: 0; }
+  .callout strong { color: var(--accent); }
+  .callout-warn { border-left-color: #d4890a; background: var(--amber-bg); }
+  .callout-warn p { color: var(--amber); }
+  .callout-warn strong { color: #a06200; }
+
+  /* ── LAYER STACK ── */
+  .layers { margin: 2rem 0; display: flex; flex-direction: column; gap: 0.6rem; }
+  .layer {
+    display: grid; grid-template-columns: 38px 1fr; gap: 0.9rem;
+    border: 1px solid var(--rule); border-left: 4px solid var(--c, var(--accent));
+    border-radius: 10px; background: var(--card); padding: 1rem 1.25rem;
+  }
+  .layer .n { font-family: var(--mono); font-size: 12px; color: var(--c, var(--accent)); padding-top: 2px; }
+  .layer h3 { font-size: 1rem; font-weight: 600; color: var(--ink); margin-bottom: 0.2rem; }
+  .layer p { font-size: 0.88rem; margin: 0 0 0.4rem; }
+  .layer .meta { font-family: var(--mono); font-size: 11px; color: var(--ink-3); margin: 0; }
+
+  /* ── ORCHESTRATOR FLOW ── */
+  .fan { margin: 2rem 0; border: 1px solid var(--rule); border-radius: 10px; background: var(--card); padding: 1.25rem; }
+  .fan-top, .fan-bottom {
+    text-align: center; font-family: var(--mono); font-size: 12px;
+    border-radius: 8px; padding: 0.6rem 0.8rem;
+  }
+  .fan-top { background: var(--accent-light); color: var(--accent); }
+  .fan-bottom { background: var(--green-bg); color: var(--green); }
+  .fan-arrow { text-align: center; color: var(--ink-3); font-family: var(--mono); font-size: 12px; margin: 0.45rem 0; }
+  .fan-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0.5rem; }
+  .fan-node {
+    border: 1px solid var(--rule); border-radius: 8px; padding: 0.6rem 0.7rem; text-align: center;
+  }
+  .fan-node .t { font-weight: 600; font-size: 0.85rem; color: var(--ink); }
+  .fan-node .d { font-size: 0.75rem; color: var(--ink-3); line-height: 1.4; }
+
+  /* ── CODE ── */
+  pre {
+    font-family: var(--mono); font-size: 12.5px; line-height: 1.65;
+    background: #14141f; color: #e6e6f0; padding: 1.1rem 1.25rem;
+    border-radius: 10px; overflow-x: auto; margin: 1.5rem 0;
+  }
+  pre .c { color: #8b8ba8; }
+  pre .k { color: #a9a3ff; }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+
+  /* ── TABLE ── */
+  .table-scroll { overflow-x: auto; margin: 1.5rem 0; border: 1px solid var(--rule); border-radius: 10px; }
+  .t-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; background: var(--card); }
+  .t-table th {
+    text-align: left; font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--ink-3); padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--rule); background: var(--page);
+  }
+  .t-table td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--rule); color: var(--ink-2); vertical-align: top; }
+  .t-table tr:last-child td { border-bottom: none; }
+  .t-table td:first-child { font-weight: 600; color: var(--ink); white-space: nowrap; }
+
+  /* ── CHECKLIST ── */
+  .checklist { list-style: none; margin: 1.5rem 0; padding: 0; }
+  .checklist li {
+    display: flex; gap: 0.8rem; padding: 0.8rem 0;
+    border-bottom: 1px solid var(--rule); color: var(--ink-2); font-size: 0.95rem;
+  }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist .mark { font-family: var(--mono); color: var(--green); font-weight: 500; flex-shrink: 0; }
+  .checklist strong { color: var(--ink); }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="logo" href="../index.html"><span>soumya</span>.dev</a>
+  <nav>
+    <a href="../index.html">← All posts</a>
+  </nav>
+  <span class="tag-pill">Claude Code · 2026</span>
+</header>
+
+<div class="hero">
+  <p class="hero-eyebrow">Claude Code · Custom Agents</p>
+  <h1>Agents that <em>remember your project</em> and play well with others.</h1>
+  <p class="hero-sub">The third time I typed the same prompt, I wrote it down as an agent. Here's how those agents carry context, how they hand work to each other, and where that falls apart.</p>
+  <div class="hero-meta">
+    <span>7 min read</span>
+    <span>·</span>
+    <span>Claude Code users with prompts they keep retyping</span>
+  </div>
+</div>
+
+<div class="content-wrap">
+
+  <!-- ── 01 ── -->
+  <div class="section">
+    <p class="section-label">01 · The trigger</p>
+    <h2>A repeated prompt is an agent waiting to be written</h2>
+    <p>Most of my agents started the same way. I'd paste a long prompt for a recurring job (triage a review comment, resolve a merge conflict, review a PR), notice I was pasting it again, and finally move it into a file.</p>
+    <p>A custom agent is just a markdown file in <code>~/.claude/agents/</code> (yours everywhere) or <code>.claude/agents/</code> (one repo). The frontmatter says when to use it and what it may touch. The body is the system prompt.</p>
+
+<pre><code><span class="c">---</span>
+<span class="k">name:</span> review-triage
+<span class="k">description:</span> Triages a PR review comment. Use for "is this in scope?"
+  and "what do we reply?". Shows a draft first, never posts unasked.
+<span class="k">tools:</span> Read, Grep, Glob, Bash
+<span class="k">model:</span> opus
+<span class="c">---</span>
+
+You are the review-triage agent. ...</code></pre>
+
+    <p>The <code>description</code> is the part people underinvest in. Claude uses it to decide whether to delegate, so it should say <em>when</em> to use the agent, not only what it is.</p>
+
+    <div class="callout">
+      <p><strong>Don't write it from scratch.</strong> After a long working session, the context is already full of what the agent needs: the architecture, the decisions, the traps you hit. I ask Claude to turn that session into an agent ("create an agent from what we learned here") and then trim the result. The first draft is built from real work, not from what I remember to write down. Open <code>/agents</code> to review and edit it.</p>
+    </div>
+
+    <div class="callout">
+      <p><strong>My rule of thumb:</strong> third repeat becomes an agent. Second repeat is a note in <code>CLAUDE.md</code>. First time is just a prompt. Writing agents too early just gives you files to maintain.</p>
+    </div>
+  </div>
+
+  <!-- ── 02 ── -->
+  <div class="section">
+    <p class="section-label">02 · Context</p>
+    <h2>How an agent knows your project</h2>
+    <p>A fresh agent starts with an empty context. It has your code, but not your history, conventions, or the traps you've already fallen into. I give mine that knowledge in three layers, from most stable to most volatile.</p>
+
+    <div class="layers">
+      <div class="layer" style="--c:#5046e4">
+        <span class="n">L1</span>
+        <div>
+          <h3>The agent body</h3>
+          <p>Stable facts that rarely change: architecture overview, one section per component, shared conventions, hard rules, the output format.</p>
+          <p class="meta">Edit when: the architecture changes.</p>
+        </div>
+      </div>
+      <div class="layer" style="--c:#1a7a4a">
+        <span class="n">L2</span>
+        <div>
+          <h3>Ground-truth files, read at the start</h3>
+          <p>The agent's first instruction is "read these files before anything else": a conventions doc, a list of known traps, the current ticket. The agent stays small; the facts live in files you update anyway.</p>
+          <p class="meta">Edit when: the facts change. No agent edit needed.</p>
+        </div>
+      </div>
+      <div class="layer" style="--c:#b87028">
+        <span class="n">L3</span>
+        <div>
+          <h3>Session and memory context</h3>
+          <p><code>CLAUDE.md</code>, the project's memory directory, and whatever the current session has already loaded. This is where "we decided X yesterday" lives.</p>
+          <p class="meta">Edit when: you learn something worth keeping.</p>
+        </div>
+      </div>
+    </div>
+
+    <p>The split matters because of staleness. Facts baked into the agent body go out of date silently. So I keep L1 to things that are structural, and push anything that changes weekly into L2 files the agent re-reads on every run.</p>
+
+    <div class="callout callout-warn">
+      <p><strong>Trap:</strong> an agent prompt that says "the current branch is X" or "the open PRs are Y" is wrong the day after you write it. Have it re-verify anything it relies on, and say so in the prompt.</p>
+    </div>
+  </div>
+
+  <!-- ── 03 ── -->
+  <div class="section">
+    <p class="section-label">03 · Anatomy</p>
+    <h2>The skeleton I reuse</h2>
+    <p>Different agents, same shape. This is the generic version, with the sections that earned their place:</p>
+
+<pre><code><span class="c"># 1. Who and how it thinks</span>
+You are the X agent. You think like a careful senior developer
+who ships small, safe changes.
+
+<span class="c"># 2. Context</span>
+## Ground truth (read first, every run)
+- docs/conventions.md
+- docs/known-traps.md
+
+<span class="c"># 3. Hard rules</span>
+## No guessing
+- Cite file:line for every factual claim. Unverified = "assumed".
+- Re-verify anything remembered from a previous run.
+
+<span class="c"># 4. Decision rubric</span>
+## Verdicts
+BLOCKER | FIX NOW | DEFER | DISAGREE | ASK
+
+<span class="c"># 5. Output cap</span>
+## Output
+Max 4 lines per item. No essays.
+
+<span class="c"># 6. Acting</span>
+## Acting
+Show the draft first. Take the action only after explicit go-ahead.
+
+<span class="c"># 7. Learning</span>
+## Learning
+When corrected, note the rule here so it isn't repeated.</code></pre>
+
+    <p>Three of these do most of the work. <strong>Hard rules</strong> carry over the habit from my <a href="claude-code-confidently-wrong.html" style="color:var(--accent)">previous post</a>: cite sources, mark guesses. <strong>The output cap</strong> keeps results short enough to act on. <strong>"Show first, act on approval"</strong> is what makes it safe to give an agent write access to anything outward-facing.</p>
+  </div>
+
+  <!-- ── 04 ── -->
+  <div class="section">
+    <p class="section-label">04 · Cooperation</p>
+    <h2>Orchestrator and specialists</h2>
+    <p>One agent that knows everything gets long and vague. The pattern that worked better: an <strong>orchestrator</strong> that only classifies and delegates, and <strong>specialists</strong> that each know one domain well.</p>
+
+    <div class="fan">
+      <div class="fan-top">Orchestrator: fetch the diff, classify files by domain</div>
+      <div class="fan-arrow">↓ fan out, in parallel</div>
+      <div class="fan-row">
+        <div class="fan-node"><div class="t">Backend</div><div class="d">APIs, queries, auth</div></div>
+        <div class="fan-node"><div class="t">Frontend</div><div class="d">components, state</div></div>
+        <div class="fan-node"><div class="t">Database</div><div class="d">schema, migrations</div></div>
+        <div class="fan-node"><div class="t">DevOps</div><div class="d">CI, infra, config</div></div>
+      </div>
+      <div class="fan-arrow">↓ each returns findings only</div>
+      <div class="fan-bottom">Orchestrator: dedupe, rank, one consolidated review</div>
+    </div>
+
+    <p>Two details keep this from turning into noise. First, the orchestrator gets <strong>no domain opinions</strong> of its own; its job is routing and synthesis. Second, every specialist is told to <strong>return only findings</strong>, not narrate what it read. That keeps the orchestrator's context small enough to synthesize cleanly.</p>
+    <p>Routing is mostly the <code>description</code> field again. A tight description like "Use for SQL, ORM models, and migrations" is what gets the right specialist picked without you naming it.</p>
+  </div>
+
+  <!-- ── 05 ── -->
+  <div class="section">
+    <p class="section-label">05 · Across sessions</p>
+    <h2>When the other agent is a different session</h2>
+    <p>Subagents live inside one session: the parent spawns them, they report back, they're gone. But I usually have several sessions open at once, one per project. Claude Code has tools for crossing that boundary:</p>
+
+    <div class="table-scroll">
+      <table class="t-table">
+        <thead><tr><th>Tool</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td>ListAgents</td><td>Lists agents you can message: in-process subagents, teammates, and other local Claude sessions on the machine.</td></tr>
+          <tr><td>SendMessage</td><td>Sends a message to one of them by name, and can continue a subagent you spawned earlier with its context intact.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>That second use is the one I rely on most. Spawning a fresh subagent for each follow-up throws away everything it learned. Messaging the existing one keeps its context, so "now check the second file too" costs a sentence instead of a re-briefing.</p>
+    <p>For messaging other sessions, the useful mental model is a colleague, not a function call. You hand over what you know, ask a specific question, and treat the answer as input to verify, not as truth.</p>
+
+    <div class="callout callout-warn">
+      <p><strong>Know the limits:</strong> a message to another session carries only what you write in it. It does not see your conversation. If it needs context, put the context in the message.</p>
+    </div>
+  </div>
+
+  <!-- ── 06 ── -->
+  <div class="section">
+    <p class="section-label">06 · Failure modes</p>
+    <h2>Where this breaks</h2>
+    <p>Multi-agent setups fail in boring ways. These are the ones I hit:</p>
+
+    <div class="table-scroll">
+      <table class="t-table">
+        <thead><tr><th>Failure</th><th>Why</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td>Stale context</td><td>Facts baked into the agent body drift out of date.</td><td>Move changing facts to L2 files. Tell the agent to re-verify.</td></tr>
+          <tr><td>Wrong agent picked</td><td>Vague <code>description</code>.</td><td>Say when to use it, and when not to.</td></tr>
+          <tr><td>Conflicting edits</td><td>Two agents change the same file.</td><td>Give specialists read-only tools. One writer per file.</td></tr>
+          <tr><td>Noisy synthesis</td><td>Specialists return full narration.</td><td>"Findings only, under N words."</td></tr>
+          <tr><td>Unwanted action</td><td>Agent posts or deletes without asking.</td><td>"Show first, act on go-ahead" in the prompt, tools trimmed.</td></tr>
+          <tr><td>Agent sprawl</td><td>Agents written too early, never maintained.</td><td>Third-repeat rule. Delete the unused.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>The "conflicting edits" row is the one that bites hardest. Giving most specialists only <code>Read</code>, <code>Grep</code>, and <code>Glob</code> removes the problem at the source, and it makes them safer to run in parallel.</p>
+  </div>
+
+  <!-- ── 07 ── -->
+  <div class="section">
+    <p class="section-label">07 · Takeaways</p>
+    <h2>Before you write the next agent</h2>
+
+    <ul class="checklist">
+      <li><span class="mark">01</span><span><strong>Wait for the third repeat,</strong> then have Claude draft the agent from the session that did the work.</span></li>
+      <li><span class="mark">02</span><span><strong>Write the description for routing.</strong> When to use it, when not to.</span></li>
+      <li><span class="mark">03</span><span><strong>Layer the context.</strong> Stable in the body, changing in files it re-reads, learned in memory.</span></li>
+      <li><span class="mark">04</span><span><strong>Cap the output and trim the tools.</strong> Short results, minimum access.</span></li>
+      <li><span class="mark">05</span><span><strong>Show first, act on approval</strong> for anything outward-facing.</span></li>
+      <li><span class="mark">06</span><span><strong>Message, don't respawn,</strong> when a follow-up needs the earlier context.</span></li>
+    </ul>
+
+    <p>An agent isn't magic. It's a prompt you stopped retyping, plus the context you got tired of re-explaining. The payoff comes from keeping it small, current, and a little bit suspicious of itself.</p>
+  </div>
+
+</div>
+
+<footer class="site-footer">
+  <a href="../index.html">← All posts</a> · soumya.dev
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Confidence Is Not Evidence: Fixing Claude Code's Wrong Guesses — soumya.dev</title>
+<meta name="description" content="Months of daily Claude Code use taught me one thing: confidence is not evidence. The three habits and one loop that stopped it from stacking wrong fixes on wrong guesses.">
+<link rel="stylesheet" href="../assets/style.css">
+<style>
+  /* ── HERO ── */
+  .hero {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 5rem 2rem 3rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .hero-eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+  }
+  .hero h1 {
+    font-family: var(--serif);
+    font-size: clamp(2.2rem, 5vw, 3.4rem);
+    line-height: 1.15;
+    color: var(--ink);
+    margin-bottom: 1.25rem;
+  }
+  .hero h1 em { font-style: italic; color: var(--accent); }
+  .hero-sub {
+    font-size: 1.1rem;
+    color: var(--ink-2);
+    max-width: 560px;
+    margin-bottom: 2rem;
+  }
+  .hero-meta {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-3);
+  }
+
+  /* ── SECTIONS ── */
+  .section { padding: 3.5rem 0; border-bottom: 1px solid var(--rule); }
+  .section:last-child { border-bottom: none; }
+  .section-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+  }
+  .section h2 { font-size: 1.5rem; font-weight: 600; color: var(--ink); margin-bottom: 1rem; }
+  p { color: var(--ink-2); margin-bottom: 1rem; line-height: 1.7; }
+  p:last-child { margin-bottom: 0; }
+
+  /* ── CALLOUTS ── */
+  .callout {
+    border-left: 3px solid var(--accent);
+    padding: 1rem 1.25rem;
+    background: var(--accent-light);
+    border-radius: 0 8px 8px 0;
+    margin: 1.5rem 0;
+  }
+  .callout p { font-size: 0.9rem; color: var(--ink-2); margin: 0; }
+  .callout strong { color: var(--accent); }
+  .callout-warn { border-left-color: #d4890a; background: var(--amber-bg); }
+  .callout-warn p { color: var(--amber); }
+  .callout-warn strong { color: #a06200; }
+
+  /* ── STORY TIMELINE ── */
+  .story {
+    margin: 1.75rem 0;
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    background: var(--card);
+    overflow: hidden;
+  }
+  .story-row {
+    display: grid;
+    grid-template-columns: 78px 1fr;
+    gap: 1rem;
+    padding: 0.9rem 1.25rem;
+    border-bottom: 1px solid var(--rule);
+    align-items: baseline;
+  }
+  .story-row:last-child { border-bottom: none; }
+  .story-who {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .story-row.claude .story-who { color: var(--accent); }
+  .story-row.me .story-who { color: var(--green); }
+  .story-row p { margin: 0; font-size: 0.92rem; }
+  .story-row.fail { background: var(--amber-bg); }
+  .story-row.fail p { color: var(--amber); }
+
+  /* ── FLOW ── */
+  .flow {
+    margin: 2rem 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+  .flow-step {
+    flex: 1 1 100px;
+    min-width: 100px;
+    border: 1px solid var(--rule);
+    border-top: 3px solid var(--accent);
+    border-radius: 8px;
+    background: var(--card);
+    padding: 0.75rem 0.8rem;
+  }
+  .flow-step .n { font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+  .flow-step .t { font-weight: 600; font-size: 0.9rem; color: var(--ink); margin: 0.15rem 0; }
+  .flow-step .d { font-size: 0.78rem; color: var(--ink-3); line-height: 1.4; }
+  .flow-step.gate { border-top-color: var(--green); }
+  .flow-loop {
+    flex-basis: 100%;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--amber);
+    background: var(--amber-bg);
+    border-radius: 8px;
+    padding: 0.55rem 0.9rem;
+    text-align: center;
+  }
+
+  /* ── BAD / GOOD PROMPTS ── */
+  .compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.85rem;
+    margin: 1.75rem 0;
+  }
+  @media (max-width: 620px) {
+    .compare { grid-template-columns: 1fr; }
+    .story-row { grid-template-columns: 1fr; gap: 0.2rem; }
+  }
+  .cmp {
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    background: var(--card);
+    overflow: hidden;
+  }
+  .cmp-head {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .cmp.bad .cmp-head { background: var(--amber-bg); color: var(--amber); }
+  .cmp.good .cmp-head { background: var(--green-bg); color: var(--green); }
+  .cmp-body { padding: 0.9rem 1rem; }
+  .cmp-body .prompt {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--ink);
+    margin-bottom: 0.7rem;
+  }
+  .cmp-body .result { font-size: 0.85rem; color: var(--ink-3); line-height: 1.55; margin: 0; }
+  .cmp-body .result strong { color: var(--ink-2); }
+
+  /* ── CODE ── */
+  pre {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.65;
+    background: #14141f;
+    color: #e6e6f0;
+    padding: 1.1rem 1.25rem;
+    border-radius: 10px;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+  }
+  pre .c { color: #8b8ba8; }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+
+  /* ── CHECKLIST ── */
+  .checklist { list-style: none; margin: 1.5rem 0; padding: 0; }
+  .checklist li {
+    display: flex;
+    gap: 0.8rem;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid var(--rule);
+    color: var(--ink-2);
+    font-size: 0.95rem;
+  }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist .mark { font-family: var(--mono); color: var(--green); font-weight: 500; flex-shrink: 0; }
+  .checklist strong { color: var(--ink); }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="logo" href="../index.html"><span>soumya</span>.dev</a>
+  <nav>
+    <a href="../index.html">← All posts</a>
+  </nav>
+  <span class="tag-pill">Claude Code · 2026</span>
+</header>
+
+<div class="hero">
+  <p class="hero-eyebrow">Claude Code · Lessons Learned</p>
+  <h1>Confidence is not evidence:<br><em>fixing Claude Code's wrong guesses.</em></h1>
+  <p class="hero-sub">After months of daily use, the biggest time sink wasn't bad code. It was a wrong guess, stated calmly, that I built three fixes on top of. One loop and three habits stopped it.</p>
+  <div class="hero-meta">
+    <span>6 min read</span>
+    <span>·</span>
+    <span>Anyone using Claude Code daily on real code</span>
+  </div>
+</div>
+
+<div class="content-wrap">
+
+  <!-- ── 01 THE STORY ── -->
+  <div class="section">
+    <p class="section-label">01 · The pattern</p>
+    <h2>The fix that fixed nothing</h2>
+    <p>Here's a composite of something that happened to me more than once, with the details changed. A service intermittently times out. I paste the error and ask for help.</p>
+
+    <div class="story">
+      <div class="story-row me"><span class="story-who">Me</span><p>Requests to the orders API time out sometimes. Can you look?</p></div>
+      <div class="story-row claude"><span class="story-who">Claude</span><p>The client timeout is 5 seconds, which is too low under load. I've raised it to 30.</p></div>
+      <div class="story-row me"><span class="story-who">Me</span><p>Still timing out.</p></div>
+      <div class="story-row claude"><span class="story-who">Claude</span><p>Then connection pooling is exhausted. I've bumped the pool size and added retries.</p></div>
+      <div class="story-row me"><span class="story-who">Me</span><p>Worse now. Requests take 90 seconds to fail.</p></div>
+      <div class="story-row fail"><span class="story-who">Reality</span><p>The client timeout was never 5 seconds. The 5 came from an old default Claude assumed. The real cause was a downstream dependency returning 503, and the new retries multiplied the load.</p></div>
+    </div>
+
+    <p>Nothing here is a coding mistake. Every edit was syntactically fine. The failure was the first sentence: a claim with no source, delivered with full confidence, and then treated as fact by everything after it.</p>
+  </div>
+
+  <!-- ── 02 WHY ── -->
+  <div class="section">
+    <p class="section-label">02 · Why it happens</p>
+    <h2>Confidence is a tone, not a measurement</h2>
+    <p>Claude writes "the timeout is 5 seconds" in the same voice whether it just read that line in your config or is filling in a typical default. The prose doesn't change. You can't tell the difference by reading it.</p>
+    <p>Two things make it worse over a long session:</p>
+    <p><strong>Its own guesses become context.</strong> Once a wrong claim is in the conversation, later turns treat it as an established fact and reason from it.</p>
+    <p><strong>Fixes stack.</strong> Each patch changes the system, so the next symptom looks different, and the original wrong assumption is now buried under three edits.</p>
+
+    <div class="callout">
+      <p><strong>The reframe:</strong> I stopped asking "is Claude right?" and started asking "what would show me?" Every claim should either point at evidence or be marked as a guess.</p>
+    </div>
+  </div>
+
+  <!-- ── 03 THE LOOP ── -->
+  <div class="section">
+    <p class="section-label">03 · The loop</p>
+    <h2>One loop for every task</h2>
+    <p>This is the whole system. Six steps, with one rule: if verification fails, the fix is reverted and I go back to evidence, not forward to another patch.</p>
+
+    <div class="flow">
+      <div class="flow-step gate"><div class="n">01</div><div class="t">Plan</div><div class="d">No edits. Assumptions listed.</div></div>
+      <div class="flow-step"><div class="n">02</div><div class="t">Evidence</div><div class="d">Root cause with a source.</div></div>
+      <div class="flow-step"><div class="n">03</div><div class="t">Small fix</div><div class="d">One cause, one change.</div></div>
+      <div class="flow-step"><div class="n">04</div><div class="t">Verify</div><div class="d">Reproduce, then re-run.</div></div>
+      <div class="flow-step"><div class="n">05</div><div class="t">Second look</div><div class="d">Fresh reviewer, diff only.</div></div>
+      <div class="flow-step gate"><div class="n">06</div><div class="t">Commit</div><div class="d">Only after 1 to 5.</div></div>
+      <div class="flow-loop">verify fails → revert the fix → back to 02. never patch on top of a failed patch.</div>
+    </div>
+
+    <p>The next three sections are the habits that make steps 1, 2 and 4 work in practice. Each one is a prompt change you can start using today.</p>
+  </div>
+
+  <!-- ── 04 LESSON 1 ── -->
+  <div class="section">
+    <p class="section-label">04 · Habit 1</p>
+    <h2>Demand a source for every claim</h2>
+    <p>If Claude states a value, a name, or a behavior, the follow-up is always the same: where did that come from? A real answer is a file and line, a log entry, or a command output. A weak answer ("it's typically...") tells you it was a guess.</p>
+
+    <div class="compare">
+      <div class="cmp bad">
+        <div class="cmp-head">Before</div>
+        <div class="cmp-body">
+          <p class="prompt">why is the request timing out?</p>
+          <p class="result"><strong>Result:</strong> a confident story built from common causes. Plausible, unverified.</p>
+        </div>
+      </div>
+      <div class="cmp good">
+        <div class="cmp-head">After</div>
+        <div class="cmp-body">
+          <p class="prompt">why is the request timing out? for each claim, give the file:line or log line it comes from. mark anything you couldn't verify as "assumed".</p>
+          <p class="result"><strong>Result:</strong> sourced claims, plus an explicit list of guesses to check first.</p>
+        </div>
+      </div>
+    </div>
+
+    <p>The "assumed" label is the useful part. It turns an invisible guess into a to-do item, and it's usually where the bug is hiding.</p>
+
+    <div class="callout">
+      <p><strong>Cheap test:</strong> when a detail seems oddly specific (a table, a flag, a config key), ask "did you read this, or infer it?" Inference is fine. Presenting inference as a reading is the problem.</p>
+    </div>
+  </div>
+
+  <!-- ── 05 LESSON 2 ── -->
+  <div class="section">
+    <p class="section-label">05 · Habit 2</p>
+    <h2>Root cause first. Revert when a fix fails.</h2>
+    <p>"Still broken" is the most dangerous message to send mid-session, because the default reaction is another patch. After a failed fix, I do two things instead: revert it, and make Claude go back to evidence.</p>
+
+    <div class="compare">
+      <div class="cmp bad">
+        <div class="cmp-head">Before</div>
+        <div class="cmp-body">
+          <p class="prompt">still timing out, try something else</p>
+          <p class="result"><strong>Result:</strong> new theory, new edit, on top of the old edit. Two unknowns now.</p>
+        </div>
+      </div>
+      <div class="cmp good">
+        <div class="cmp-head">After</div>
+        <div class="cmp-body">
+          <p class="prompt">revert that change. read the logs and find the root cause. don't assume anything we haven't seen in the logs.</p>
+          <p class="result"><strong>Result:</strong> back to a known state, and a cause traced to actual output.</p>
+        </div>
+      </div>
+    </div>
+
+    <p>Reverting feels like losing progress. It isn't. A failed fix is information: it tells you the theory was wrong. Keeping the edit just muddies the next experiment.</p>
+
+    <div class="callout callout-warn">
+      <p><strong>Watch for:</strong> a fix that "seems to work" without ever reproducing the original failure. If you never saw it fail, you can't know you fixed it. Reproduce first, then fix, then re-run the same reproduction.</p>
+    </div>
+  </div>
+
+  <!-- ── 06 LESSON 3 ── -->
+  <div class="section">
+    <p class="section-label">06 · Habit 3</p>
+    <h2>Plan first. No edits until I say so.</h2>
+    <p>A wrong plan costs one sentence to correct. A wrong diff costs a review, a revert, and sometimes a merge conflict. So for anything non-trivial, the first prompt asks for thinking, not code.</p>
+
+    <div class="compare">
+      <div class="cmp bad">
+        <div class="cmp-head">Before</div>
+        <div class="cmp-body">
+          <p class="prompt">add rate limiting to the API</p>
+          <p class="result"><strong>Result:</strong> a full implementation, picked library, chosen limits, edited five files. None of it discussed.</p>
+        </div>
+      </div>
+      <div class="cmp good">
+        <div class="cmp-head">After</div>
+        <div class="cmp-body">
+          <p class="prompt">high-level plan only for adding rate limiting. don't edit anything. list your assumptions and what you'd check first.</p>
+          <p class="result"><strong>Result:</strong> a short plan I can correct: "you assumed per-IP, we need per-user."</p>
+        </div>
+      </div>
+    </div>
+
+    <p>The "list your assumptions" line does double duty. It's the same trick as habit 1, applied before any code exists.</p>
+  </div>
+
+  <!-- ── 07 LOCK IT IN ── -->
+  <div class="section">
+    <p class="section-label">07 · Make it stick</p>
+    <h2>Put the rules where you don't have to retype them</h2>
+    <p>I kept typing the same corrections, so I moved them into my global <code>CLAUDE.md</code>. Claude reads it every session, so the habits apply even when I'm tired and my prompt is lazy.</p>
+
+<pre><code><span class="c"># CLAUDE.md</span>
+
+- Start with the simplest minimal change. A small fix request gets a small fix.
+- Confirm your understanding before editing. If ambiguous, ask.
+- Cite file:line or log output for factual claims. Label guesses "assumed".
+- If a fix fails, revert it before trying another approach.
+- "Test locally" means mock external dependencies. Leave no test artifacts
+  in real systems.</code></pre>
+
+    <p>For step 5 of the loop, I use a second reviewer. The key detail: give it the diff, not your conclusion. If you hand over "I think the bug is X, confirm," it tends to confirm. If you hand over the change and ask "what could this break?", it looks.</p>
+
+    <div class="callout">
+      <p><strong>Pairs well with:</strong> a built-in advisor or review subagent for step 5. A fresh context hasn't absorbed the earlier wrong guesses, which is exactly why it catches them.</p>
+    </div>
+  </div>
+
+  <!-- ── 08 CHECKLIST ── -->
+  <div class="section">
+    <p class="section-label">08 · Takeaways</p>
+    <h2>The five-line version</h2>
+
+    <ul class="checklist">
+      <li><span class="mark">01</span><span><strong>Plan before code.</strong> Ask for assumptions, approve, then edit.</span></li>
+      <li><span class="mark">02</span><span><strong>Every claim gets a source.</strong> Unsourced means "assumed", and assumptions get checked first.</span></li>
+      <li><span class="mark">03</span><span><strong>One cause, one small fix.</strong> Resist bundling "while we're here" changes.</span></li>
+      <li><span class="mark">04</span><span><strong>Reproduce, fix, re-run.</strong> If the fix fails, revert, don't stack.</span></li>
+      <li><span class="mark">05</span><span><strong>Fresh eyes on the diff</strong> before commit, with no conclusion attached.</span></li>
+    </ul>
+
+    <p>None of this is about distrusting the tool. Claude Code is fast and often right, and these habits make the "often" safer. The goal is to catch the wrong guess at step one, when it costs a sentence, instead of at step six, when it costs an afternoon.</p>
+  </div>
+
+</div>
+
+<footer class="site-footer">
+  <a href="../index.html">← All posts</a> · soumya.dev
+</footer>
+
+</body>
+</html>
